@@ -5,6 +5,7 @@ import { prisma } from '../../services/db.service.ts';
 import emailValidator from 'validators/email.validator.ts';
 import passwordValidator from 'validators/password.validator.ts';
 import phoneValidator from 'validators/phone.validator.ts';
+import hashPassword from 'utils/hashPassword.util.ts';
 
 export const createUser = async (req: Request, res: Response) => {
   try {
@@ -107,10 +108,27 @@ export const createUser = async (req: Request, res: Response) => {
     }
 
     //! set role ==> default is USER / ADMIN if first user is being created
-    const isFirstUser =  await prisma.user.count() === 0;
+    const isFirstUser = (await prisma.user.count()) === 0;
 
     const role = isFirstUser ? 'ADMIN' : 'USER';
 
+    //! hash password
+    const hashedPassword = await hashPassword(validatedPassword);
+
+    //! create user
+    const user = await prisma.user.create({
+      data: {
+        name,
+        username,
+        email,
+        password: hashedPassword,
+        phone,
+        role,
+      },
+      omit: { password: true },
+    });
+
+    res.status(201).json({ message: 'User created successfully', user });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
   }
