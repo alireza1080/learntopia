@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import apiRoutes from './routes/api.route.ts';
 
 const app = express();
 
@@ -9,8 +10,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(helmet());
 
-app.get('/', (req, res) => {
-  res.send('Hello World');
-});
+app.use('/api', apiRoutes);
 
 export default app;
