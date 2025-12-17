@@ -4,6 +4,7 @@ import usernameValidator from '../../validators/username.validator.ts';
 import { prisma } from '../../services/db.service.ts';
 import emailValidator from 'validators/email.validator.ts';
 import passwordValidator from 'validators/password.validator.ts';
+import phoneValidator from 'validators/phone.validator.ts';
 
 export const createUser = async (req: Request, res: Response) => {
   try {
@@ -14,32 +15,47 @@ export const createUser = async (req: Request, res: Response) => {
       password,
       confirmPassword,
       phone: rawPhone,
-      role,
     } = req.body;
 
     //! validate name
-    const { success: nameSuccess, data: name, error: nameError } = nameValidator.safeParse(rawName);
+    const {
+      success: nameSuccess,
+      data: name,
+      error: nameError,
+    } = nameValidator.safeParse(rawName);
 
     if (!nameSuccess) {
       return res.status(400).json({ message: nameError?.issues[0]?.message });
     }
-    
+
     //! validate username
-    const { success: usernameSuccess, data: username, error: usernameError } = usernameValidator.safeParse(rawUsername);
+    const {
+      success: usernameSuccess,
+      data: username,
+      error: usernameError,
+    } = usernameValidator.safeParse(rawUsername);
 
     if (!usernameSuccess) {
-      return res.status(400).json({ message: usernameError?.issues[0]?.message });
+      return res
+        .status(400)
+        .json({ message: usernameError?.issues[0]?.message });
     }
 
     //! check if username is already taken
-    const existingUsername = await prisma.user.findUnique({ where: { username } });
+    const existingUsername = await prisma.user.findUnique({
+      where: { username },
+    });
 
     if (existingUsername) {
       return res.status(400).json({ message: 'Username is already taken' });
     }
 
     //! validate email
-    const { success: emailSuccess, data: email, error: emailError } = emailValidator.safeParse(rawEmail);
+    const {
+      success: emailSuccess,
+      data: email,
+      error: emailError,
+    } = emailValidator.safeParse(rawEmail);
 
     if (!emailSuccess) {
       return res.status(400).json({ message: emailError?.issues[0]?.message });
@@ -53,16 +69,47 @@ export const createUser = async (req: Request, res: Response) => {
     }
 
     //! validate password
-    const { success: passwordSuccess, data: validatedPassword, error: passwordError } = passwordValidator.safeParse(password);
+    const {
+      success: passwordSuccess,
+      data: validatedPassword,
+      error: passwordError,
+    } = passwordValidator.safeParse(password);
 
     if (!passwordSuccess) {
-      return res.status(400).json({ message: passwordError?.issues[0]?.message });
+      return res
+        .status(400)
+        .json({ message: passwordError?.issues[0]?.message });
     }
 
     //! check if password and confirm password match
     if (password !== confirmPassword) {
-      return res.status(400).json({ message: 'Password and confirm password do not match' });
+      return res
+        .status(400)
+        .json({ message: 'Password and confirm password do not match' });
     }
+
+    //! validate phone
+    const {
+      success: phoneSuccess,
+      data: phone,
+      error: phoneError,
+    } = phoneValidator.safeParse(rawPhone);
+
+    if (!phoneSuccess) {
+      return res.status(400).json({ message: phoneError?.issues[0]?.message });
+    }
+
+    //! check if phone is already taken
+    const existingPhone = await prisma.user.findUnique({ where: { phone } });
+
+    if (existingPhone) {
+      return res.status(400).json({ message: 'Phone number is already taken' });
+    }
+
+    //! set role ==> default is USER / ADMIN if first user is being created
+    const isFirstUser =  await prisma.user.count() === 0;
+
+    const role = isFirstUser ? 'ADMIN' : 'USER';
 
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
