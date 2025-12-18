@@ -192,6 +192,16 @@ const deleteUser = async (req: Request, res: Response) => {
         .json({ message: 'Target user is not available' });
     }
 
+    //! check if the target user is an admin
+    const isTargetUserAdmin = targetUser.role === 'ADMIN';
+
+    //! if the target user is an admin, check if it is the only admin
+    const isOnlyAdmin = await prisma.user.count({ where: { role: 'ADMIN' } }) === 1;
+
+    if (isTargetUserAdmin && isOnlyAdmin) {
+      return res.status(400).json({ message: 'The last admin cannot be deleted' });
+    }
+
     //! delete target user
     await prisma.user.delete({ where: { id: targetUserId } });
 
