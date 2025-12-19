@@ -12,6 +12,11 @@ import checkPassword from 'utils/checkPassword.util.ts';
 
 const register = async (req: Request, res: Response) => {
   try {
+    //! Check if request body is provided
+    if (!req.body) {
+      return res.status(400).json({ message: 'Request body is required' });
+    }
+
     const {
       name: rawName,
       username: rawUsername,
@@ -145,6 +150,11 @@ const register = async (req: Request, res: Response) => {
 
 const login = async (req: Request, res: Response) => {
   try {
+    //! Check if request body is provided
+    if (!req.body) {
+      return res.status(400).json({ message: 'Request body is required' });
+    }
+
     const { identifier: rawIdentifier, password } = req.body;
 
     //! Check if identifier is provided
