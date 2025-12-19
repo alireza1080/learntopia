@@ -8,6 +8,7 @@ import phoneValidator from 'validators/phone.validator.ts';
 import hashPassword from 'utils/hashPassword.util.ts';
 import mongodbIdValidator from 'validators/mongodbId.validator.ts';
 import createToken from 'utils/createToken.util.ts';
+import checkPassword from 'utils/checkPassword.util.ts';
 
 const register = async (req: Request, res: Response) => {
   try {
@@ -142,7 +143,57 @@ const register = async (req: Request, res: Response) => {
   }
 };
 
-const login = async (req: Request, res: Response) => {};
+const login = async (req: Request, res: Response) => {
+  try {
+    const { identifier: rawIdentifier, password } = req.body;
+
+    //! Check if identifier is provided
+    if (!rawIdentifier) {
+      return res.status(400).json({ message: 'Email or username is required' });
+    }
+
+    //! Check if password is provided
+    if (!password) {
+      return res.status(400).json({ message: 'Password is required' });
+    }
+
+    const identifier = rawIdentifier.toLowerCase();
+
+    //! check if there is a user with the given identifier
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: identifier },
+          { username: identifier },
+        ],
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    //! check if user is banned
+    if (user.isBanned) {
+      return res.status(400).json({ message: 'Access denied, your account has been banned' });
+    }
+
+    //! check if password is correct
+    const isPasswordCorrect = await checkPassword(password, user.password);
+
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    //! generate access token
+    const accessToken = createToken(user.id, '30 days');
+
+    return res.status(200).json({ message: 'Login successful', user, accessToken });
+  } catch (error) {
+    console.error('Error logging in', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 const logout = async (req: Request, res: Response) => {};
 
