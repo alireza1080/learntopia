@@ -11,7 +11,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  // url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -22,6 +22,7 @@ model User {
   password  String
   phone     String   @unique
   role      Role     @default(USER)
+  isBanned  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -30,4 +31,13 @@ enum Role {
   ADMIN
   TEACHER
   USER
+}
+
+model BannedUser {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId @unique
+  reason    String
+  bannedBy  String   @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
