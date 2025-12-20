@@ -6,12 +6,11 @@ const authMiddleware = async (req: Request, res: Response, next: NextFunction) =
     try {
         //! Get token from headers
         const token = req.headers.authorization?.split(' ')[1];
-        
         //! Next if token is not provided
         if (!token) {
             return next();
         }
-
+        
         //! Verify token
         const decoded = await verifyToken(token);
 

@@ -7,7 +7,7 @@ const verifyToken = async (token: string) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string };
         return decoded;
     } catch (error) {
-        console.error('Error verifying token', error);
+        // console.error('Error verifying token', error);
         return null;
     }
 };
