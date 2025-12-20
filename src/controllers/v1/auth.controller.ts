@@ -172,10 +172,7 @@ const login = async (req: Request, res: Response) => {
     //! check if there is a user with the given identifier
     const user = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email: identifier },
-          { username: identifier },
-        ],
+        OR: [{ email: identifier }, { username: identifier }],
       },
     });
 
@@ -185,7 +182,9 @@ const login = async (req: Request, res: Response) => {
 
     //! check if user is banned
     if (user.isBanned) {
-      return res.status(400).json({ message: 'Access denied, your account has been banned' });
+      return res
+        .status(400)
+        .json({ message: 'Access denied, your account has been banned' });
     }
 
     //! check if password is correct
@@ -198,7 +197,9 @@ const login = async (req: Request, res: Response) => {
     //! generate access token
     const accessToken = createToken(user.id, '30 days');
 
-    return res.status(200).json({ message: 'Login successful', user, accessToken });
+    return res
+      .status(200)
+      .json({ message: 'Login successful', user, accessToken });
   } catch (error) {
     console.error('Error logging in', error);
     return res.status(500).json({ message: 'Internal server error' });

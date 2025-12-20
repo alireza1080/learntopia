@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const nameValidator = z
-  .string({error: 'Name must be a string'})
+  .string({ error: 'Name must be a string' })
   .trim()
   .min(1, 'Name is required')
   .min(3, 'Name must be at least 3 characters')
