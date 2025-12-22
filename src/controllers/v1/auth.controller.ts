@@ -82,7 +82,7 @@ const register = async (req: Request, res: Response) => {
       success: passwordSuccess,
       data: validatedPassword,
       error: passwordError,
-    } = passwordValidator.safeParse(password);
+    } = passwordValidator('Password').safeParse(password);
 
     if (!passwordSuccess) {
       return res
@@ -185,6 +185,11 @@ const login = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ message: 'Access denied, your account has been banned' });
+    }
+
+    //! check if the password is a valid string
+    if (typeof password !== 'string') {
+      return res.status(400).json({ message: 'Password must be a valid string' });
     }
 
     //! check if password is correct

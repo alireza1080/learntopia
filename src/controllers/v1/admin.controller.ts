@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from 'services/db.service.ts';
 import mongodbIdValidator from 'validators/mongodbId.validator.ts';
-import { Prisma } from '@prisma/client';
 import roleValidator from 'validators/role.validator.ts';
 import { Role } from 'generated/prisma/client.ts';
 
@@ -269,7 +268,9 @@ const updateUserRole = async (req: Request, res: Response) => {
 
     return res
       .status(200)
-      .json({ message: `${user.name}'s role updated to ${role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()} successfully` });
+      .json({
+        message: `${user.name}'s role updated to ${role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()} successfully`,
+      });
   } catch (error) {
     console.error('Error updating user role', error);
     return res.status(500).json({ message: 'Internal server error' });
