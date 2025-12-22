@@ -126,4 +126,23 @@ const unBanUser = async (req: Request, res: Response) => {
   }
 };
 
-export { banUser, unBanUser };
+const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const { page: rawPage, limit: rawLimit } = req.params;
+
+    const [page, limit] = [Number(rawPage), Number(rawLimit)];
+
+    //! get all users
+    const users = await prisma.user.findMany({
+      skip: (page - 1) * limit || 0,
+      take: limit || 10,
+    });
+
+    return res.status(200).json({ message: 'Users fetched successfully', data: users });
+  } catch (error) {
+    console.error('Error getting all users', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export { banUser, unBanUser, getAllUsers };
