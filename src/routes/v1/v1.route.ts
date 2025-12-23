@@ -5,20 +5,22 @@ import authMiddleware from 'middlewares/auth.middleware.ts';
 import roleLevelMiddleware from 'middlewares/roleLevel.middleware.ts';
 import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 import userRoutes from './routes/user.route.ts';
+import courseCategoryRoutes from './routes/courseCategory.route.ts';
 
 const router = Router();
 
-router.use('/auth', authRoutes);
+router.use('/auth',authMiddleware, roleLevelMiddleware, authRoutes);
+
 router.use('/admin', authMiddleware, roleLevelMiddleware, adminRoutes);
+
 router.use(
   '/user',
   authMiddleware,
   roleLevelMiddleware,
-  accessByLevelMiddleware(
-    [1, 2, 3],
-    'Log in to use this feature'
-  ),
+  accessByLevelMiddleware([1, 2, 3], 'Log in to use this feature'),
   userRoutes
 );
+
+router.use('/course-category', authMiddleware, roleLevelMiddleware, courseCategoryRoutes);
 
 export default router;
