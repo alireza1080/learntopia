@@ -212,6 +212,10 @@ const editCourseCategory = async (req: Request, res: Response) => {
   }
 };
 
+const deleteCourseCategory = async (req: Request, res: Response) => {
+  //! To delete a course category, we need to make sure that no course is associated with it
+};
+
 const getAllCourseCategories = async (req: Request, res: Response) => {
   try {
     const courseCategories = await prisma.courseCategory.findMany();
@@ -225,4 +229,4 @@ const getAllCourseCategories = async (req: Request, res: Response) => {
   }
 };
 
-export { createCourseCategory, getAllCourseCategories, editCourseCategory };
+export { createCourseCategory, getAllCourseCategories, editCourseCategory, deleteCourseCategory };

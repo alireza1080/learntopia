@@ -35,7 +35,7 @@ enum Role {
 
 model BannedUser {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId @unique
+  userId    String   @unique @db.ObjectId
   reason    String
   bannedBy  String   @db.ObjectId
   createdAt DateTime @default(now())
@@ -51,11 +51,27 @@ model courseCategory {
 }
 
 model Course {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  title     String   @unique
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String   @unique
   description String
-  categoryId String   @db.ObjectId
-  teacherId  String   @db.ObjectId
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  categoryId  String   @db.ObjectId
+  teacherId   String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model session {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  courseId      String   @db.ObjectId
+  sessionNumber Int
+  title         String
+  duration      String
+  description   String
+  isFree        Boolean  @default(false)
+  imageUrl      String
+  videoUrl      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([courseId, sessionNumber])
 }

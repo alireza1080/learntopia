@@ -3,6 +3,7 @@ import {
   createCourseCategory,
   getAllCourseCategories,
   editCourseCategory,
+  deleteCourseCategory,
 } from 'controllers/v1/courseCategory.controller.ts';
 import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 
@@ -26,6 +27,14 @@ router.put(
   editCourseCategory
 );
 
+router.delete(
+  '/delete/:id',
+  accessByLevelMiddleware(
+    [3],
+    'Only admins is allowed to delete a course category'
+  ),
+  deleteCourseCategory
+);
 router.get('/get-all', getAllCourseCategories);
 
 export default router;
