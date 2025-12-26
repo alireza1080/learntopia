@@ -266,11 +266,9 @@ const updateUserRole = async (req: Request, res: Response) => {
         .json({ message: 'Failed to update user role, try again later' });
     }
 
-    return res
-      .status(200)
-      .json({
-        message: `${user.name}'s role updated to ${role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()} successfully`,
-      });
+    return res.status(200).json({
+      message: `${user.name}'s role updated to ${role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()} successfully`,
+    });
   } catch (error) {
     console.error('Error updating user role', error);
     return res.status(500).json({ message: 'Internal server error' });

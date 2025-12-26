@@ -10,7 +10,7 @@ import courseRoutes from './routes/course.route.ts';
 
 const router = Router();
 
-router.use('/auth',authMiddleware, roleLevelMiddleware, authRoutes);
+router.use('/auth', authMiddleware, roleLevelMiddleware, authRoutes);
 
 router.use('/admin', authMiddleware, roleLevelMiddleware, adminRoutes);
 
@@ -22,7 +22,12 @@ router.use(
   userRoutes
 );
 
-router.use('/course-category', authMiddleware, roleLevelMiddleware, courseCategoryRoutes);
+router.use(
+  '/course-category',
+  authMiddleware,
+  roleLevelMiddleware,
+  courseCategoryRoutes
+);
 
 router.use('/course', authMiddleware, roleLevelMiddleware, courseRoutes);
 

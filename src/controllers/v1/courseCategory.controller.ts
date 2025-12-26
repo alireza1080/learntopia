@@ -152,9 +152,7 @@ const editCourseCategory = async (req: Request, res: Response) => {
         success: newCategorySlugSuccess,
         data: newCategorySlugResult,
         error: newCategorySlugError,
-      } = slugValidator('New Category Slug').safeParse(
-        newCategorySlugRaw
-      );
+      } = slugValidator('New Category Slug').safeParse(newCategorySlugRaw);
       if (!newCategorySlugSuccess) {
         return res
           .status(400)
@@ -229,4 +227,9 @@ const getAllCourseCategories = async (req: Request, res: Response) => {
   }
 };
 
-export { createCourseCategory, getAllCourseCategories, editCourseCategory, deleteCourseCategory };
+export {
+  createCourseCategory,
+  getAllCourseCategories,
+  editCourseCategory,
+  deleteCourseCategory,
+};

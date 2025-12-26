@@ -189,7 +189,9 @@ const login = async (req: Request, res: Response) => {
 
     //! check if the password is a valid string
     if (typeof password !== 'string') {
-      return res.status(400).json({ message: 'Password must be a valid string' });
+      return res
+        .status(400)
+        .json({ message: 'Password must be a valid string' });
     }
 
     //! check if password is correct
