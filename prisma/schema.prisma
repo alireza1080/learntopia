@@ -42,7 +42,7 @@ model BannedUser {
   updatedAt DateTime @updatedAt
 }
 
-model courseCategory {
+model CourseCategory {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @unique
   slug      String   @unique
@@ -53,16 +53,20 @@ model courseCategory {
 model Course {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String   @unique
+  categoryId  String   @db.ObjectId
+  teacherId   String   @db.ObjectId
   description String
   cover       String
   slug        String   @unique
-  categoryId  String   @db.ObjectId
-  teacherId   String   @db.ObjectId
+  price       Int      @default(0)
+  discount    Int      @default(0) // in percentage
+  isPublished Boolean  @default(false)
+  isCompleted Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model session {
+model Session {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   courseId      String   @db.ObjectId
   sessionNumber Int
@@ -78,7 +82,7 @@ model session {
   @@unique([courseId, sessionNumber])
 }
 
-model comments {
+model Comment {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   userId     String   @db.ObjectId
   courseId   String   @db.ObjectId
@@ -91,7 +95,7 @@ model comments {
   updatedAt  DateTime @updatedAt
 }
 
-model courseRating {
+model CourseRating {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String   @db.ObjectId
   courseId  String   @db.ObjectId
