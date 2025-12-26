@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const courseCategoryHrefValidator = (fieldName: string) =>
+const slugValidator = (fieldName: string) =>
   z
     .string({ error: `${fieldName} must be a string` })
     .trim()
@@ -18,4 +18,4 @@ const courseCategoryHrefValidator = (fieldName: string) =>
         .join('-')
     );
 
-export default courseCategoryHrefValidator;
+export default slugValidator;

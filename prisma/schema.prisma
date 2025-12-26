@@ -45,7 +45,7 @@ model BannedUser {
 model courseCategory {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @unique
-  href      String   @unique
+  slug      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -54,6 +54,8 @@ model Course {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String   @unique
   description String
+  cover       String
+  slug        String   @unique
   categoryId  String   @db.ObjectId
   teacherId   String   @db.ObjectId
   createdAt   DateTime @default(now())
@@ -65,7 +67,7 @@ model session {
   courseId      String   @db.ObjectId
   sessionNumber Int
   title         String
-  duration      String
+  duration      Int
   description   String
   isFree        Boolean  @default(false)
   imageUrl      String

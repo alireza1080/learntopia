@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import categoryNameValidator from '../../validators/categoryName.validator.ts';
-import courseCategoryHrefValidator from '../../validators/courseCategoryHref.validator.ts';
+import slugValidator from '../../validators/slug.validator.ts';
 import { prisma } from 'services/db.service.ts';
 import mongodbIdValidator from 'validators/mongodbId.validator.ts';
 
@@ -12,7 +12,7 @@ const createCourseCategory = async (req: Request, res: Response) => {
     }
 
     //! Get name and href from request body
-    const { name: categoryNameRaw, href: categoryHrefRaw } = req.body;
+    const { name: categoryNameRaw, slug: categorySlugRaw } = req.body;
 
     //! Validate category name
     const {
@@ -27,17 +27,17 @@ const createCourseCategory = async (req: Request, res: Response) => {
         .json({ message: categoryNameError?.issues[0]?.message });
     }
 
-    //! Validate category href
+    //! Validate category slug
     const {
-      success: categoryHrefSuccess,
-      data: categoryHref,
-      error: categoryHrefError,
-    } = courseCategoryHrefValidator('Category Href').safeParse(categoryHrefRaw);
+      success: categorySlugSuccess,
+      data: categorySlug,
+      error: categorySlugError,
+    } = slugValidator('Category Slug').safeParse(categorySlugRaw);
 
-    if (!categoryHrefSuccess) {
+    if (!categorySlugSuccess) {
       return res
         .status(400)
-        .json({ message: categoryHrefError?.issues[0]?.message });
+        .json({ message: categorySlugError?.issues[0]?.message });
     }
 
     //! Check if category name is already taken
@@ -53,24 +53,24 @@ const createCourseCategory = async (req: Request, res: Response) => {
         .json({ message: 'Category name is already taken' });
     }
 
-    //! Check if category href is already taken
-    const existingCategoryHref = await prisma.courseCategory.findUnique({
+    //! Check if category slug is already taken
+    const existingCategorySlug = await prisma.courseCategory.findUnique({
       where: {
-        href: categoryHref,
+        slug: categorySlug,
       },
     });
 
-    if (existingCategoryHref) {
+    if (existingCategorySlug) {
       return res
         .status(400)
-        .json({ message: 'Category href is already taken' });
+        .json({ message: 'Category slug is already taken' });
     }
 
     //! Create course category
     const courseCategory = await prisma.courseCategory.create({
       data: {
         name: categoryName,
-        href: categoryHref,
+        slug: categorySlug,
       },
     });
 
@@ -117,7 +117,7 @@ const editCourseCategory = async (req: Request, res: Response) => {
     }
 
     //! Get name and href from request body
-    const { name: newCategoryNameRaw, href: newCategoryHrefRaw } = req.body;
+    const { name: newCategoryNameRaw, slug: newCategorySlugRaw } = req.body;
 
     //! Initialize new category name
     let newCategoryName: string;
@@ -143,35 +143,35 @@ const editCourseCategory = async (req: Request, res: Response) => {
     }
 
     //! Initialize new category href
-    let newCategoryHref: string;
+    let newCategorySlug: string;
 
     //! check if new category href is provided
-    if (newCategoryHrefRaw) {
+    if (newCategorySlugRaw) {
       //! Validate new category href
       const {
-        success: newCategoryHrefSuccess,
-        data: newCategoryHrefResult,
-        error: newCategoryHrefError,
-      } = courseCategoryHrefValidator('New Category Href').safeParse(
-        newCategoryHrefRaw
+        success: newCategorySlugSuccess,
+        data: newCategorySlugResult,
+        error: newCategorySlugError,
+      } = slugValidator('New Category Slug').safeParse(
+        newCategorySlugRaw
       );
-      if (!newCategoryHrefSuccess) {
+      if (!newCategorySlugSuccess) {
         return res
           .status(400)
-          .json({ message: newCategoryHrefError?.issues[0]?.message });
+          .json({ message: newCategorySlugError?.issues[0]?.message });
       }
-      newCategoryHref = newCategoryHrefResult;
+      newCategorySlug = newCategorySlugResult;
     } else {
-      newCategoryHref = existingCourseCategory.href;
+      newCategorySlug = existingCourseCategory.slug;
     }
 
     // //! Check if new category name or href is already taken
-    const [existingCategoryName, existingCategoryHref] = await Promise.all([
+    const [existingCategoryName, existingCategorySlug] = await Promise.all([
       prisma.courseCategory.findUnique({
         where: { name: newCategoryName },
       }),
       prisma.courseCategory.findUnique({
-        where: { href: newCategoryHref },
+        where: { slug: newCategorySlug },
       }),
     ]);
 
@@ -181,10 +181,10 @@ const editCourseCategory = async (req: Request, res: Response) => {
         .json({ message: 'New category name is already taken' });
     }
 
-    if (existingCategoryHref && existingCategoryHref.id !== courseCategoryId) {
+    if (existingCategorySlug && existingCategorySlug.id !== courseCategoryId) {
       return res
         .status(400)
-        .json({ message: 'New category href is already taken' });
+        .json({ message: 'New category slug is already taken' });
     }
 
     //! Update course category
@@ -192,7 +192,7 @@ const editCourseCategory = async (req: Request, res: Response) => {
       where: { id: courseCategoryId },
       data: {
         name: newCategoryName,
-        href: newCategoryHref,
+        slug: newCategorySlug,
       },
     });
 
