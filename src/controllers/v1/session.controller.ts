@@ -4,9 +4,7 @@ import mongodbIdValidator from 'validators/mongodbId.validator.ts';
 import titleNameValidator from 'validators/categoryName.validator.ts';
 import durationValidator from 'validators/duration.validator.ts';
 import descriptionValidator from 'validators/description.validator.ts';
-import z from 'zod';
 import booleanValidator from 'validators/boolean.validator.ts';
-import fileNameValidator from 'validators/fileName.validator.ts';
 import fileTypeValidator from 'validators/fileType.validator.ts';
 import dummyUploadUrlGenerator from 'utils/generateUploadUrl.util.ts';
 
@@ -210,20 +208,22 @@ const getAllSessions = async (req: Request, res: Response) => {
 
     const orderBy = rawOrderBy === 'asc' ? 'asc' : 'desc';
 
+    const skip = (page - 1) * limit;
+
+    const take = limit;
+
     const allSessions = await prisma.session.findMany({
-      skip: (page - 1) * limit,
-      take: limit,
+      skip,
+      take,
       orderBy: {
         createdAt: orderBy,
       },
     });
 
-    return res
-      .status(200)
-      .json({
-        message: 'Sessions fetched successfully',
-        data: { allSessions },
-      });
+    return res.status(200).json({
+      message: 'Sessions fetched successfully',
+      data: { allSessions },
+    });
   } catch (error) {
     console.error('Error getting all sessions', error);
     return res
@@ -232,16 +232,109 @@ const getAllSessions = async (req: Request, res: Response) => {
   }
 };
 
-const getSessionById = async (req: Request, res: Response) => {};
+const getSessionById = async (req: Request, res: Response) => {
+  try {
+    const { sessionId: rawSessionId } = req.params;
 
-const getSessionBySlug = async (req: Request, res: Response) => {};
+    //! Validate sessionId
+    const {
+      success: sessionIdSuccess,
+      error: sessionIdError,
+      data: sessionId,
+    } = mongodbIdValidator('Session ID').safeParse(rawSessionId);
 
-const getSessionsByCourseId = async (req: Request, res: Response) => {};
+    if (!sessionIdSuccess) {
+      return res
+        .status(400)
+        .json({ message: sessionIdError?.issues[0]?.message });
+    }
 
-export {
-  createSession,
-  getAllSessions,
-  getSessionById,
-  getSessionBySlug,
-  getSessionsByCourseId,
+    //! Check if session exists
+    const existingSession = await prisma.session.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!existingSession) {
+      return res.status(400).json({ message: 'Session not found' });
+    }
+
+    return res.status(200).json({
+      message: 'Session fetched successfully',
+      data: { session: existingSession },
+    });
+  } catch (error) {
+    console.error('Error getting session by id', error);
+    return res
+      .status(500)
+      .json({ message: 'Error getting session by id, please try again later' });
+  }
 };
+
+const getSessionsByCourseId = async (req: Request, res: Response) => {
+  try {
+    const { courseId: rawCourseId } = req.params;
+
+    //! Validate courseId
+    const {
+      success: courseIdSuccess,
+      error: courseIdError,
+      data: courseId,
+    } = mongodbIdValidator('Course ID').safeParse(rawCourseId);
+
+    if (!courseIdSuccess) {
+      return res
+        .status(400)
+        .json({ message: courseIdError?.issues[0]?.message });
+    }
+
+    //! Check if course exists
+    const existingCourse = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!existingCourse) {
+      return res.status(400).json({ message: 'Course not found' });
+    }
+
+    //! Get page and limit and orderBy from query
+    const {
+      page: rawPage,
+      limit: rawLimit,
+      orderBy: rawOrderBy,
+    } = req.query as {
+      page: string | undefined;
+      limit: string | undefined;
+      orderBy: 'asc' | 'desc';
+    };
+
+    const [page, limit] = [Number(rawPage) || 1, Number(rawLimit) || 10];
+
+    const orderBy = rawOrderBy === 'asc' ? 'asc' : 'desc';
+
+    const skip = (page - 1) * limit;
+
+    const take = limit;
+
+    //! Get sessions by course id
+    const sessions = await prisma.session.findMany({
+      where: { courseId },
+      skip,
+      take,
+      orderBy: {
+        createdAt: orderBy,
+      },
+    });
+
+    return res.status(200).json({
+      message: 'Sessions fetched successfully',
+      data: { sessions },
+    });
+  } catch (error) {
+    console.error('Error getting sessions by course id', error);
+    return res.status(500).json({
+      message: 'Error getting sessions by course id, please try again later',
+    });
+  }
+};
+
+export { createSession, getAllSessions, getSessionById, getSessionsByCourseId };

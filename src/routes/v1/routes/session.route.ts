@@ -2,7 +2,6 @@ import {
   createSession,
   getAllSessions,
   getSessionById,
-  getSessionBySlug,
   getSessionsByCourseId,
 } from 'controllers/v1/session.controller.ts';
 import { Router } from 'express';
@@ -29,7 +28,7 @@ router.get(
 );
 
 router.get('/get-by-id/:sessionId', getSessionById);
+
 router.get('/get-by-course-id/:courseId', getSessionsByCourseId);
-router.get('/get-by-slug/:sessionSlug', getSessionBySlug);
 
 export default router;
