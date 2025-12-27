@@ -194,4 +194,54 @@ const createSession = async (req: Request, res: Response) => {
   }
 };
 
-export { createSession };
+const getAllSessions = async (req: Request, res: Response) => {
+  try {
+    const {
+      page: rawPage,
+      limit: rawLimit,
+      orderBy: rawOrderBy,
+    } = req.query as {
+      page: string | undefined;
+      limit: string | undefined;
+      orderBy: 'asc' | 'desc' | undefined;
+    };
+
+    const [page, limit] = [Number(rawPage) || 1, Number(rawLimit) || 10];
+
+    const orderBy = rawOrderBy === 'asc' ? 'asc' : 'desc';
+
+    const allSessions = await prisma.session.findMany({
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: {
+        createdAt: orderBy,
+      },
+    });
+
+    return res
+      .status(200)
+      .json({
+        message: 'Sessions fetched successfully',
+        data: { allSessions },
+      });
+  } catch (error) {
+    console.error('Error getting all sessions', error);
+    return res
+      .status(500)
+      .json({ message: 'Error getting all sessions, please try again later' });
+  }
+};
+
+const getSessionById = async (req: Request, res: Response) => {};
+
+const getSessionBySlug = async (req: Request, res: Response) => {};
+
+const getSessionsByCourseId = async (req: Request, res: Response) => {};
+
+export {
+  createSession,
+  getAllSessions,
+  getSessionById,
+  getSessionBySlug,
+  getSessionsByCourseId,
+};
