@@ -9,7 +9,7 @@ const fileTypeValidator = (
     .trim()
     .min(1, `${fieldName} is required`)
     .transform((val) => val.toLowerCase())
-    .refine((val) => [fileType].includes(val as any), {
+    .refine((val) => val.startsWith(`${fileType}/`), {
       message: `${fieldName} must be a valid type of ${fileType.toUpperCase()}`,
     });
 

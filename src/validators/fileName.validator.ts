@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { transform, z } from 'zod';
 
 const fileNameValidator = (fieldName: string) =>
   z
@@ -10,6 +10,15 @@ const fileNameValidator = (fieldName: string) =>
       /^[a-zA-Z0-9\s]+$/,
       `${fieldName} must contain only letters and numbers and spaces`
     )
-    .transform((val) => val.toLowerCase());
+    .transform((val) => val.toLowerCase())
+    //! Remove all special characters
+    .transform((val) => val.replace(/[^a-zA-Z0-9\s]/g, ''))
+    .transform((val) => val.replace(/\s+/g, '-'))
+    .transform((val) => val.replace(/-+/g, '-'))
+    .transform((val) => val.replace(/^-|-$/g, ''))
+    .transform((val) => val.replace(/^\s+|\s+$/g, ''))
+    .transform((val) => val.replace(/\s+/g, ' '))
+    .transform((val) => val.replace(/^\s+|\s+$/g, ''))
+    .transform((val) => val.replace(/\s+/g, ' '))
 
 export default fileNameValidator;

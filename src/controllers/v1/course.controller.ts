@@ -1,10 +1,14 @@
 import { Request, Response } from 'express';
 import { prisma } from 'services/db.service.ts';
+import dummyUploadUrlGenerator from 'utils/generateUploadUrl.util.ts';
 import titleNameValidator from 'validators/categoryName.validator.ts';
 import descriptionValidator from 'validators/description.validator.ts';
+import discountPercentageValidator from 'validators/discountPercentage.validator.ts';
 import fileNameValidator from 'validators/fileName.validator.ts';
 import fileTypeValidator from 'validators/fileType.validator.ts';
 import mongodbIdValidator from 'validators/mongodbId.validator.ts';
+import priceValidator from 'validators/price.validator.ts';
+import slugValidator from 'validators/slug.validator.ts';
 
 const createCourse = async (req: Request, res: Response) => {
   try {
@@ -22,7 +26,7 @@ const createCourse = async (req: Request, res: Response) => {
       coverType: rawCoverType,
       slug: rawSlug,
       price: rawPrice,
-      discount: rawDiscount,
+      discountPercentage: rawDiscountPercentage,
     } = req.body;
 
     //! Validate title
@@ -77,27 +81,114 @@ const createCourse = async (req: Request, res: Response) => {
     }
 
     //! Validate coverName
-    const { success: coverNameSuccess, data: coverName, error: coverNameError } = fileNameValidator('Course cover name').safeParse(rawCoverName);
+    const {
+      success: coverNameSuccess,
+      data: coverName,
+      error: coverNameError,
+    } = fileNameValidator('Course cover name').safeParse(rawCoverName);
 
     if (!coverNameSuccess) {
       return res
         .status(400)
         .json({ message: coverNameError?.issues[0]?.message });
     }
-    
+
     //! Validate coverType
-    const { success: coverTypeSuccess, data: coverType, error: coverTypeError } = fileTypeValidator('Course cover type', 'image').safeParse(rawCoverType);
+    const {
+      success: coverTypeSuccess,
+      data: coverType,
+      error: coverTypeError,
+    } = fileTypeValidator('Course cover type', 'image').safeParse(rawCoverType);
 
     if (!coverTypeSuccess) {
       return res
         .status(400)
         .json({ message: coverTypeError?.issues[0]?.message });
     }
-    
-    res.json({ message: 'Course created successfully', data: { coverName, coverType } });
+
+    //! Validate slug
+    const {
+      success: slugSuccess,
+      data: slug,
+      error: slugError,
+    } = slugValidator('Course slug').safeParse(rawSlug);
+
+    if (!slugSuccess) {
+      return res.status(400).json({ message: slugError?.issues[0]?.message });
+    }
+
+    //! Check if slug is already taken
+    const existingSlug = await prisma.course.findUnique({
+      where: { slug },
+    });
+
+    if (existingSlug) {
+      return res.status(400).json({ message: 'Course slug is already taken' });
+    }
+
+    //! Validate price
+    const {
+      success: priceSuccess,
+      data: price,
+      error: priceError,
+    } = priceValidator('Course price', 500).safeParse(rawPrice);
+
+    if (!priceSuccess) {
+      return res.status(400).json({ message: priceError?.issues[0]?.message });
+    }
+
+    //! Validate discountPercentage
+    const {
+      success: discountPercentageSuccess,
+      data: discountPercentage,
+      error: discountPercentageError,
+    } = discountPercentageValidator('Course discount percentage').safeParse(
+      rawDiscountPercentage
+    );
+
+    if (!discountPercentageSuccess) {
+      return res
+        .status(400)
+        .json({ message: discountPercentageError?.issues[0]?.message });
+    }
+
+    //! Generate AWS Signed URL for cover to handle the upload functionality in the frontend
+    const { uploadUrl, fileKey } = dummyUploadUrlGenerator(
+      coverName,
+      coverType
+    );
+
+    if (!uploadUrl || !fileKey) {
+      return res
+        .status(500)
+        .json({
+          message: 'Error generating upload URL, please try again later',
+        });
+    }
+
+    //! Create course
+    const course = await prisma.course.create({
+      data: {
+        title,
+        categoryId,
+        teacherId,
+        description,
+        cover: fileKey,
+        slug,
+        price,
+        discountPercentage,
+      },
+    });
+
+    return res.status(201).json({
+      message: 'Course created successfully',
+      data: { course, uploadUrl },
+    });
   } catch (error) {
     console.error('Error creating course', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res
+      .status(500)
+      .json({ message: 'Error creating course, please try again later' });
   }
 };
 

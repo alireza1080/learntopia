@@ -59,7 +59,7 @@ model Course {
   cover       String
   slug        String   @unique
   price       Int      @default(0)
-  discount    Int      @default(0) // in percentage
+  discountPercentage    Int      @default(0) // in percentage
   isPublished Boolean  @default(false)
   isCompleted Boolean  @default(false)
   createdAt   DateTime @default(now())
