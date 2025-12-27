@@ -7,6 +7,7 @@ import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 import userRoutes from './routes/user.route.ts';
 import courseCategoryRoutes from './routes/courseCategory.route.ts';
 import courseRoutes from './routes/course.route.ts';
+import sessionRoutes from './routes/session.route.ts';
 
 const router = Router();
 
@@ -30,5 +31,7 @@ router.use(
 );
 
 router.use('/course', authMiddleware, roleLevelMiddleware, courseRoutes);
+
+router.use('/session', authMiddleware, roleLevelMiddleware, sessionRoutes);
 
 export default router;

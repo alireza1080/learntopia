@@ -50,20 +50,16 @@ const updatePassword = async (req: Request, res: Response) => {
 
     //! check if new password and confirm new password match
     if (newPassword !== rawConfirmNewPassword) {
-      return res
-        .status(400)
-        .json({
-          message: 'New password and confirm new password do not match',
-        });
+      return res.status(400).json({
+        message: 'New password and confirm new password do not match',
+      });
     }
 
     //! check if the new password is not the same as the current password
     if (newPassword === rawCurrentPassword) {
-      return res
-        .status(400)
-        .json({
-          message: 'New password cannot be the same as the current password',
-        });
+      return res.status(400).json({
+        message: 'New password cannot be the same as the current password',
+      });
     }
 
     //! hash new password

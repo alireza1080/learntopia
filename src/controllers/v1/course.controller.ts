@@ -159,11 +159,9 @@ const createCourse = async (req: Request, res: Response) => {
     );
 
     if (!uploadUrl || !fileKey) {
-      return res
-        .status(500)
-        .json({
-          message: 'Error generating upload URL, please try again later',
-        });
+      return res.status(500).json({
+        message: 'Error generating upload URL, please try again later',
+      });
     }
 
     //! Create course

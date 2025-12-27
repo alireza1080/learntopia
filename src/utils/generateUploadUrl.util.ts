@@ -3,10 +3,10 @@
 //! We'll do it for deployment stage and for now we just create dummy upload url and file key
 
 const dummyUploadUrlGenerator = (fileName: string, fileType: string) => {
-    return {
-        uploadUrl: `https://dummy-upload-url.com/${fileName}`,
-        fileKey: `dummy-file-key/${fileName}`,
-    }
-}
+  return {
+    uploadUrl: `https://dummy-upload-url.com/${fileName}`,
+    fileKey: `dummy-file-key/${fileName}`,
+  };
+};
 
 export default dummyUploadUrlGenerator;

@@ -51,19 +51,19 @@ model CourseCategory {
 }
 
 model Course {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String   @unique
-  categoryId  String   @db.ObjectId
-  teacherId   String   @db.ObjectId
-  description String
-  cover       String
-  slug        String   @unique
-  price       Int      @default(0)
-  discountPercentage    Int      @default(0) // in percentage
-  isPublished Boolean  @default(false)
-  isCompleted Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  title              String   @unique
+  categoryId         String   @db.ObjectId
+  teacherId          String   @db.ObjectId
+  description        String
+  cover              String
+  slug               String   @unique
+  price              Int      @default(0)
+  discountPercentage Int      @default(0) // in percentage
+  isPublished        Boolean  @default(false)
+  isCompleted        Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model Session {
@@ -71,8 +71,9 @@ model Session {
   courseId      String   @db.ObjectId
   sessionNumber Int
   title         String
-  duration      Int
+  duration      Int // in seconds
   description   String
+  slug          String
   isFree        Boolean  @default(false)
   imageUrl      String
   videoUrl      String
@@ -80,6 +81,7 @@ model Session {
   updatedAt     DateTime @updatedAt
 
   @@unique([courseId, sessionNumber])
+  @@unique([slug, courseId])
 }
 
 model Comment {

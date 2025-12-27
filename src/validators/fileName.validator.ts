@@ -13,12 +13,9 @@ const fileNameValidator = (fieldName: string) =>
     .transform((val) => val.toLowerCase())
     //! Remove all special characters
     .transform((val) => val.replace(/[^a-zA-Z0-9\s]/g, ''))
+    //! Replace all spaces with hyphens
     .transform((val) => val.replace(/\s+/g, '-'))
-    .transform((val) => val.replace(/-+/g, '-'))
-    .transform((val) => val.replace(/^-|-$/g, ''))
-    .transform((val) => val.replace(/^\s+|\s+$/g, ''))
-    .transform((val) => val.replace(/\s+/g, ' '))
-    .transform((val) => val.replace(/^\s+|\s+$/g, ''))
-    .transform((val) => val.replace(/\s+/g, ' '))
+    //! Remove all consecutive hyphens
+    .transform((val) => val.replace(/-+/g, '-'));
 
 export default fileNameValidator;
