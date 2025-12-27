@@ -204,9 +204,11 @@ const login = async (req: Request, res: Response) => {
     //! generate access token
     const accessToken = createToken(user.id, '30 days');
 
-    return res
-      .status(200)
-      .json({ message: 'Login successful', user, accessToken });
+    return res.status(200).json({
+      message: 'Login successful',
+      user: { ...user, password: undefined },
+      accessToken,
+    });
   } catch (error) {
     console.error('Error logging in', error);
     return res.status(500).json({ message: 'Internal server error' });

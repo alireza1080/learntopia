@@ -23,7 +23,6 @@ const roleLevelMiddleware = async (
         break;
       case 'USER':
         req.roleLevel = 1;
-        console.log(userRole);
         break;
       default:
         req.roleLevel = 0;

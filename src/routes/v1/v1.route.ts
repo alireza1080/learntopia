@@ -8,6 +8,7 @@ import userRoutes from './routes/user.route.ts';
 import courseCategoryRoutes from './routes/courseCategory.route.ts';
 import courseRoutes from './routes/course.route.ts';
 import sessionRoutes from './routes/session.route.ts';
+import commentRoutes from './routes/comment.route.ts';
 
 const router = Router();
 
@@ -15,13 +16,7 @@ router.use('/auth', authMiddleware, roleLevelMiddleware, authRoutes);
 
 router.use('/admin', authMiddleware, roleLevelMiddleware, adminRoutes);
 
-router.use(
-  '/user',
-  authMiddleware,
-  roleLevelMiddleware,
-  accessByLevelMiddleware([1, 2, 3], 'Log in to use this feature'),
-  userRoutes
-);
+router.use('/user', authMiddleware, roleLevelMiddleware, userRoutes);
 
 router.use(
   '/course-category',
@@ -33,5 +28,7 @@ router.use(
 router.use('/course', authMiddleware, roleLevelMiddleware, courseRoutes);
 
 router.use('/session', authMiddleware, roleLevelMiddleware, sessionRoutes);
+
+router.use('/comment', authMiddleware, roleLevelMiddleware, commentRoutes);
 
 export default router;

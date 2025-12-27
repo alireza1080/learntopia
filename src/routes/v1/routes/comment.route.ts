@@ -1,16 +1,16 @@
+import { createComment } from 'controllers/v1/comment.controller.ts';
 import { Router } from 'express';
-import { updatePassword } from 'controllers/v1/user.controller.ts';
 import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 
 const router = Router();
 
-router.patch(
-  '/update-password',
+router.post(
+  '/create',
   accessByLevelMiddleware(
     [1, 2, 3],
-    'You should be logged in to update your password'
+    'You should be logged in to create a comment'
   ),
-  updatePassword
+  createComment
 );
 
 export default router;
