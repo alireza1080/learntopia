@@ -190,4 +190,67 @@ const createCourse = async (req: Request, res: Response) => {
   }
 };
 
-export { createCourse };
+const purchaseCourse = async (req: Request, res: Response) => {
+  try {
+    //! get courseId from request params
+    const { courseId } = req.params;
+
+    //! validate courseId
+    const { success: courseIdSuccess, error: courseIdError } =
+      mongodbIdValidator('Course ID').safeParse(courseId);
+
+    if (!courseIdSuccess) {
+      return res
+        .status(400)
+        .json({ message: courseIdError?.issues[0]?.message });
+    }
+
+    //! check if course exists
+    const existingCourse = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!existingCourse) {
+      return res.status(400).json({ message: 'Course not found' });
+    }
+
+    //! check if user has already purchased the course
+    const existingUserCourse = await prisma.userCourse.findUnique({
+      where: { userId_courseId: { userId: req.user?.id as string, courseId } },
+    });
+
+    if (existingUserCourse) {
+      return res
+        .status(400)
+        .json({ message: 'You have already purchased this course' });
+    }
+
+    //! create user course record
+    const userCourse = await prisma.userCourse.create({
+      data: {
+        userId: req.user?.id as string,
+        courseId,
+        price: existingCourse.price,
+        discountPercentage: existingCourse.discountPercentage,
+      },
+    });
+
+    if (!userCourse) {
+      return res
+        .status(400)
+        .json({ message: 'Failed to purchase course, please try again later' });
+    }
+
+    return res.status(200).json({
+      message: 'Course purchased successfully',
+      data: { userCourse },
+    });
+  } catch (error) {
+    console.error('Error purchasing course', error);
+    return res
+      .status(500)
+      .json({ message: 'Error purchasing course, please try again later' });
+  }
+};
+
+export { createCourse, purchaseCourse };
