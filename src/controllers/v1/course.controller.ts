@@ -347,14 +347,25 @@ const getCourseById = async (req: Request, res: Response) => {
       0
     );
 
-    //! get comments for the course
+    //! get comments for the course which are approved and they are not a reply
     const comments = await prisma.comment.findMany({
-      where: { courseId },
+      where: { courseId, isApproved: true, isItReply: false},
     });
 
     //! get comment author for each comment
     const commentAuthors = await prisma.user.findMany({
       where: { id: { in: comments.map((comment) => comment.userId) } },
+      omit: { password: true, phone: true, email: true },
+    });
+
+    //! get replies for each comment
+    const replies = await prisma.comment.findMany({
+      where: { courseId, isApproved: true, isItReply: true },
+    });
+
+    //! get reply author for each reply
+    const replyAuthors = await prisma.user.findMany({
+      where: { id: { in: replies.map((reply) => reply.userId) } },
       omit: { password: true, phone: true, email: true },
     });
 
@@ -373,6 +384,11 @@ const getCourseById = async (req: Request, res: Response) => {
       roundedAverageRating = Math.round(averageRating * 10) / 10;
     }
 
+    //! get the number of students who have purchased the course
+    const numberOfStudents = await prisma.userCourse.count({
+      where: { courseId },
+    });
+
     return res.status(200).json({
       message: 'Course fetched successfully',
       data: {
@@ -389,12 +405,17 @@ const getCourseById = async (req: Request, res: Response) => {
           data: comments.map((comment) => ({
             ...comment,
             author: commentAuthors.find((author) => author.id === comment.userId),
+            replies: replies.map((reply) => ({
+              ...reply,
+              author: replyAuthors.find((author) => author.id === reply.userId),
+            })),
           })),
         },
         ratings: {
           average: roundedAverageRating,
           total: ratings.length,
         },
+        numberOfStudents,
       },
     });
   } catch (error) {
