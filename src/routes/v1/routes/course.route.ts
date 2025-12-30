@@ -3,6 +3,7 @@ import {
   createCourse,
   purchaseCourse,
   getAllCoursesByCategoryId,
+  getCourseById,
 } from '../../../controllers/v1/course.controller.ts';
 import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 
@@ -28,5 +29,7 @@ router.post(
 );
 
 router.get('/category/:categoryId', getAllCoursesByCategoryId);
+
+router.get('/:courseId', getCourseById)
 
 export default router;

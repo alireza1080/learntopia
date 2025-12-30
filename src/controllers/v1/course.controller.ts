@@ -303,4 +303,35 @@ const getAllCoursesByCategoryId = async (req: Request, res: Response) => {
   }
 };
 
-export { createCourse, purchaseCourse, getAllCoursesByCategoryId };
+const getCourseById = async (req: Request, res: Response) => {
+  try {
+    //! get courseId from request params
+    const { courseId } = req.params;
+
+    //! validate courseId
+    const { success: courseIdSuccess, error: courseIdError } = mongodbIdValidator('Course ID').safeParse(courseId);
+
+    if (!courseIdSuccess) {
+      return res.status(400).json({ message: courseIdError?.issues[0]?.message });
+    }
+
+    //! check if course exists
+    const existingCourse = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!existingCourse) {
+      return res.status(400).json({ message: 'Course not found' });
+    }
+
+    return res.status(200).json({
+      message: 'Course fetched successfully',
+      data: { course: existingCourse },
+    });
+  } catch (error) {
+    console.error('Error getting course by id', error);
+    return res.status(500).json({ message: 'Error getting course by id, please try again later' });
+  }
+}
+
+export { createCourse, purchaseCourse, getAllCoursesByCategoryId, getCourseById };
