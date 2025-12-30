@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createCourse,
   purchaseCourse,
+  getAllCoursesByCategoryId,
 } from '../../../controllers/v1/course.controller.ts';
 import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 
@@ -25,5 +26,7 @@ router.post(
   accessByLevelMiddleware([1], 'You have already purchased this course'),
   purchaseCourse
 );
+
+router.get('/category/:categoryId', getAllCoursesByCategoryId);
 
 export default router;

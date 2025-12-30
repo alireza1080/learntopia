@@ -253,4 +253,54 @@ const purchaseCourse = async (req: Request, res: Response) => {
   }
 };
 
-export { createCourse, purchaseCourse };
+const getAllCoursesByCategoryId = async (req: Request, res: Response) => {
+  try {
+    //! get categoryId from request params
+    const { categoryId } = req.params;
+
+    //! validate categoryId
+    const { success: categoryIdSuccess, error: categoryIdError } =
+      mongodbIdValidator('Category ID').safeParse(categoryId);
+
+    if (!categoryIdSuccess) {
+      return res
+        .status(400)
+        .json({ message: categoryIdError?.issues[0]?.message });
+    }
+
+    //! check if category exists
+    const existingCategory = await prisma.courseCategory.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!existingCategory) {
+      return res.status(400).json({ message: 'Category not found' });
+    }
+
+    //! get all courses by category id
+    const courses = await prisma.course.findMany({
+      where: { categoryId },
+    });
+
+    if (courses.length === 0) {
+      return res
+        .status(200)
+        .json({
+          message: `${existingCategory.name} has no courses yet`,
+          data: { courses },
+        });
+    }
+
+    return res
+      .status(200)
+      .json({ message: 'Courses fetched successfully', data: { courses } });
+  } catch (error) {
+    console.error('Error getting all courses by category id', error);
+    return res.status(500).json({
+      message:
+        'Error getting all courses by category id, please try again later',
+    });
+  }
+};
+
+export { createCourse, purchaseCourse, getAllCoursesByCategoryId };
