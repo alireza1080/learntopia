@@ -283,12 +283,10 @@ const getAllCoursesByCategoryId = async (req: Request, res: Response) => {
     });
 
     if (courses.length === 0) {
-      return res
-        .status(200)
-        .json({
-          message: `${existingCategory.name} has no courses yet`,
-          data: { courses },
-        });
+      return res.status(200).json({
+        message: `${existingCategory.name} has no courses yet`,
+        data: { courses },
+      });
     }
 
     return res
@@ -309,10 +307,13 @@ const getCourseById = async (req: Request, res: Response) => {
     const { courseId } = req.params;
 
     //! validate courseId
-    const { success: courseIdSuccess, error: courseIdError } = mongodbIdValidator('Course ID').safeParse(courseId);
+    const { success: courseIdSuccess, error: courseIdError } =
+      mongodbIdValidator('Course ID').safeParse(courseId);
 
     if (!courseIdSuccess) {
-      return res.status(400).json({ message: courseIdError?.issues[0]?.message });
+      return res
+        .status(400)
+        .json({ message: courseIdError?.issues[0]?.message });
     }
 
     //! check if course exists
@@ -324,14 +325,89 @@ const getCourseById = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Course not found' });
     }
 
+    //! get all sessions for the course
+    const sessions = await prisma.session.findMany({
+      where: { courseId },
+    });
+
+    //! get course category
+    const courseCategory = await prisma.courseCategory.findUnique({
+      where: { id: existingCourse.categoryId },
+    });
+
+    //! get course teacher
+    const courseTeacher = await prisma.user.findUnique({
+      where: { id: existingCourse.teacherId },
+      omit: { password: true, phone: true, email: true },
+    });
+
+    //! calculate the total duration of the course
+    const totalDuration = sessions.reduce(
+      (acc, session) => acc + session.duration,
+      0
+    );
+
+    //! get comments for the course
+    const comments = await prisma.comment.findMany({
+      where: { courseId },
+    });
+
+    //! get comment author for each comment
+    const commentAuthors = await prisma.user.findMany({
+      where: { id: { in: comments.map((comment) => comment.userId) } },
+      omit: { password: true, phone: true, email: true },
+    });
+
+    //! get ratings for the course
+    const ratings = await prisma.courseRating.findMany({
+      where: { courseId },
+    });
+
+    let roundedAverageRating = 5.0;
+
+    //! calculate the average rating
+    if (ratings.length > 0) {
+      const averageRating =
+        ratings.reduce((acc, rating) => acc + rating.rating, 0) /
+        ratings.length;
+      roundedAverageRating = Math.round(averageRating * 10) / 10;
+    }
+
     return res.status(200).json({
       message: 'Course fetched successfully',
-      data: { course: existingCourse },
+      data: {
+        course: existingCourse,
+        category: courseCategory,
+        teacher: courseTeacher,
+        sessions: {
+          total: sessions.length,
+          data: sessions,
+        },
+        totalDuration,
+        comments: {
+          total: comments.length,
+          data: comments.map((comment) => ({
+            ...comment,
+            author: commentAuthors.find((author) => author.id === comment.userId),
+          })),
+        },
+        ratings: {
+          average: roundedAverageRating,
+          total: ratings.length,
+        },
+      },
     });
   } catch (error) {
     console.error('Error getting course by id', error);
-    return res.status(500).json({ message: 'Error getting course by id, please try again later' });
+    return res
+      .status(500)
+      .json({ message: 'Error getting course by id, please try again later' });
   }
-}
+};
 
-export { createCourse, purchaseCourse, getAllCoursesByCategoryId, getCourseById };
+export {
+  createCourse,
+  purchaseCourse,
+  getAllCoursesByCategoryId,
+  getCourseById,
+};
