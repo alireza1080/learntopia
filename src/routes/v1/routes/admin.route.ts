@@ -6,6 +6,7 @@ import {
   deleteUser,
   updateUserRole,
   deleteCourseByCourseId,
+  getAllNotApprovedComments,
 } from 'controllers/v1/admin.controller.ts';
 import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 
@@ -46,5 +47,7 @@ router.delete(
   accessByLevelMiddleware([3], 'Only admins is allowed to delete a course'),
   deleteCourseByCourseId
 );
+
+router.get('/get-not-approved-comments/:page/:count', accessByLevelMiddleware([3], 'Only admins is allowed to get all not approved comments'), getAllNotApprovedComments);
 
 export default router;

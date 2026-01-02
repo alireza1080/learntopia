@@ -3,6 +3,7 @@ import { prisma } from 'services/db.service.ts';
 import mongodbIdValidator from 'validators/mongodbId.validator.ts';
 import roleValidator from 'validators/role.validator.ts';
 import { Role } from 'generated/prisma/client.ts';
+import positiveNumberValidator from 'validators/positiveNumber.validator.ts';
 
 const banUser = async (req: Request, res: Response) => {
   try {
@@ -326,12 +327,60 @@ const deleteCourseByCourseId = async (req: Request, res: Response) => {
     });
 
     if (!deletedCourse) {
-      return res.status(400).json({ message: 'Failed to delete course, try again later' });
+      return res
+        .status(400)
+        .json({ message: 'Failed to delete course, try again later' });
     }
 
     return res.status(200).json({ message: 'Course deleted successfully' });
   } catch (error) {
     console.error('Error deleting course', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const getAllNotApprovedComments = async (req: Request, res: Response) => {
+  try {
+    //! get count from request params
+    const { page: rawPage, count: rawCount } = req.params;
+
+    //! validate page
+    const {
+      success: pageSuccess,
+      error: pageError,
+      data: page,
+    } = positiveNumberValidator('Page').safeParse(+rawPage);
+
+    if (!pageSuccess) {
+      return res.status(400).json({ message: pageError?.issues[0]?.message });
+    }
+
+    //! validate count
+    const {
+      success: countSuccess,
+      error: countError,
+      data: count,
+    } = positiveNumberValidator('Count').safeParse(+rawCount);
+
+    if (!countSuccess) {
+      return res.status(400).json({ message: countError?.issues[0]?.message });
+    }
+
+    //! get not approved comments
+    const notApprovedComments = await prisma.comment.findMany({
+      where: { isApproved: false },
+      skip: (page - 1) * count,
+      take: count,
+    });
+
+    return res
+      .status(200)
+      .json({
+        message: 'Not approved comments fetched successfully',
+        data: notApprovedComments,
+      });
+  } catch (error) {
+    console.error('Error getting all not approved comments', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -343,4 +392,5 @@ export {
   deleteUser,
   updateUserRole,
   deleteCourseByCourseId,
+  getAllNotApprovedComments,
 };
