@@ -7,6 +7,7 @@ import discountPercentageValidator from 'validators/discountPercentage.validator
 import fileNameValidator from 'validators/fileName.validator.ts';
 import fileTypeValidator from 'validators/fileType.validator.ts';
 import mongodbIdValidator from 'validators/mongodbId.validator.ts';
+import positiveNumberValidator from 'validators/positiveNumber.validator.ts';
 import priceValidator from 'validators/price.validator.ts';
 import slugValidator from 'validators/slug.validator.ts';
 
@@ -474,9 +475,63 @@ const getCourseById = async (req: Request, res: Response) => {
   }
 };
 
+const getRelatedCourses = async (req: Request, res: Response) => {
+  try {
+    //! get courseId and count from request params
+    const { courseId, count: rawCount } = req.params;
+
+    //! validate courseId
+    const { success: courseIdSuccess, error: courseIdError } =
+      mongodbIdValidator('Course ID').safeParse(courseId);
+
+    if (!courseIdSuccess) {
+      return res
+        .status(400)
+        .json({ message: courseIdError?.issues[0]?.message });
+    }
+
+    //! validate count
+    const {
+      success: countSuccess,
+      error: countError,
+      data: count,
+    } = positiveNumberValidator('Count').safeParse(+rawCount);
+
+    if (!countSuccess) {
+      return res.status(400).json({ message: countError?.issues[0]?.message });
+    }
+
+    //! check if course exists
+    const existingCourse = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!existingCourse) {
+      return res.status(400).json({ message: 'Course not found' });
+    }
+
+    //! get related courses except the current course
+    const relatedCourses = await prisma.course.findMany({
+      where: { id: { not: courseId } },
+      take: count,
+    });
+
+    return res.status(200).json({
+      message: 'Related courses fetched successfully',
+      data: { relatedCourses },
+    });
+  } catch (error) {
+    console.error('Error getting related courses', error);
+    return res.status(500).json({
+      message: 'Error getting related courses, please try again later',
+    });
+  }
+};
+
 export {
   createCourse,
   purchaseCourse,
   getAllCoursesByCategoryId,
   getCourseById,
+  getRelatedCourses,
 };
