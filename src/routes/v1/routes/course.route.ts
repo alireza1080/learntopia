@@ -31,7 +31,7 @@ router.post(
 
 router.get('/category/:categoryId', getAllCoursesByCategoryId);
 
-router.get('/:courseId', getCourseById)
+router.get('/:courseId', getCourseById);
 
 router.get('/related-courses/:courseId/:count', getRelatedCourses);
 

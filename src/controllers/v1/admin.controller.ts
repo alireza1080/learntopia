@@ -373,14 +373,48 @@ const getAllNotApprovedComments = async (req: Request, res: Response) => {
       take: count,
     });
 
-    return res
-      .status(200)
-      .json({
-        message: 'Not approved comments fetched successfully',
-        data: notApprovedComments,
-      });
+    return res.status(200).json({
+      message: 'Not approved comments fetched successfully',
+      data: notApprovedComments,
+    });
   } catch (error) {
     console.error('Error getting all not approved comments', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const approveComment = async (req: Request, res: Response) => {
+  try {
+    const { commentId } = req.params;
+
+    //! validate comment id
+    const { success: commentIdSuccess, error: commentIdError } =
+      mongodbIdValidator('Comment ID').safeParse(commentId);
+
+    if (!commentIdSuccess) {
+      return res
+        .status(400)
+        .json({ message: commentIdError?.issues[0]?.message });
+    }
+
+    //! check if comment exists
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      return res.status(400).json({ message: 'Comment not found' });
+    }
+
+    //! approve comment by updating isApproved field to true
+    const approvedComment = await prisma.comment.update({
+      where: { id: commentId },
+      data: { isApproved: true },
+    });
+
+    return res.status(200).json({ message: 'Comment approved successfully' });
+  } catch (error) {
+    console.error('Error approving comment', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -393,4 +427,5 @@ export {
   updateUserRole,
   deleteCourseByCourseId,
   getAllNotApprovedComments,
+  approveComment,
 };
