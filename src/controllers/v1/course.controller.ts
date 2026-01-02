@@ -349,7 +349,7 @@ const getCourseById = async (req: Request, res: Response) => {
 
     //! get comments for the course which are approved and they are not a reply
     const comments = await prisma.comment.findMany({
-      where: { courseId, isApproved: true, isItReply: false},
+      where: { courseId, isApproved: true, isItReply: false },
     });
 
     //! get comment author for each comment
@@ -389,6 +389,51 @@ const getCourseById = async (req: Request, res: Response) => {
       where: { courseId },
     });
 
+    //! Check if the user is not teacher or admin
+
+    let doesUserHaveFullAccess = false;
+
+    if (req.roleLevel !== 2 && req.roleLevel !== 3) {
+      doesUserHaveFullAccess = true;
+    }
+
+    //! Check if the user is logged in to have full access to the course
+    if (req.roleLevel === 0) {
+      doesUserHaveFullAccess = false;
+    }
+
+    //! Check if the logged in user has purchased the course
+    if (req.roleLevel === 1) {
+      const existingUserCourse = await prisma.userCourse.findUnique({
+        where: {
+          userId_courseId: { userId: req.user?.id as string, courseId },
+        },
+      });
+
+      if (existingUserCourse) {
+        doesUserHaveFullAccess = true;
+      }
+
+      if (!existingUserCourse) {
+        doesUserHaveFullAccess = false;
+      }
+    }
+
+    //! Remove the videos from the sessions with isFree set to false if the user does not have full access to the course
+    let filteredSessions = sessions;
+    if (!doesUserHaveFullAccess) {
+      filteredSessions = sessions.map((session) => {
+        if (!session.isFree) {
+          return {
+            ...session,
+            videoUrl: '',
+          };
+        }
+
+        return session;
+      });
+    }
+
     return res.status(200).json({
       message: 'Course fetched successfully',
       data: {
@@ -397,14 +442,17 @@ const getCourseById = async (req: Request, res: Response) => {
         teacher: courseTeacher,
         sessions: {
           total: sessions.length,
-          data: sessions,
+          data: filteredSessions,
         },
+        doesUserHaveFullAccess,
         totalDuration,
         comments: {
           total: comments.length,
           data: comments.map((comment) => ({
             ...comment,
-            author: commentAuthors.find((author) => author.id === comment.userId),
+            author: commentAuthors.find(
+              (author) => author.id === comment.userId
+            ),
             replies: replies.map((reply) => ({
               ...reply,
               author: replyAuthors.find((author) => author.id === reply.userId),

@@ -275,4 +275,72 @@ const updateUserRole = async (req: Request, res: Response) => {
   }
 };
 
-export { banUser, unBanUser, getAllUsers, deleteUser, updateUserRole };
+const deleteCourseByCourseId = async (req: Request, res: Response) => {
+  try {
+    const { courseId } = req.params;
+
+    //! check if course id is valid
+    const { success: courseIdSuccess, error: courseIdError } =
+      mongodbIdValidator('Course ID').safeParse(courseId);
+
+    if (!courseIdSuccess) {
+      return res
+        .status(400)
+        .json({ message: courseIdError?.issues[0]?.message });
+    }
+
+    //! check if course exists
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course) {
+      return res.status(400).json({ message: 'Course not found' });
+    }
+
+    //! delete all the comments for the course
+    const deletedComments = await prisma.comment.deleteMany({
+      where: { courseId },
+    });
+
+    //! delete all the ratings for the course
+    const deletedRatings = await prisma.courseRating.deleteMany({
+      where: { courseId },
+    });
+
+    //! delete user course records for the course
+    const deletedUserCourses = await prisma.userCourse.deleteMany({
+      where: { courseId },
+    });
+
+    //! delete all the sessions for the course
+    const deletedSessions = await prisma.session.deleteMany({
+      where: { courseId },
+    });
+
+    // TODO: Delete the course videos and course cover image form the storage
+
+    //! delete the course
+    const deletedCourse = await prisma.course.delete({
+      where: { id: courseId },
+    });
+
+    if (!deletedCourse) {
+      return res.status(400).json({ message: 'Failed to delete course, try again later' });
+    }
+
+    return res.status(200).json({ message: 'Course deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting course', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export {
+  banUser,
+  unBanUser,
+  getAllUsers,
+  deleteUser,
+  updateUserRole,
+  deleteCourseByCourseId,
+};

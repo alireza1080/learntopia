@@ -5,6 +5,7 @@ import {
   getAllUsers,
   deleteUser,
   updateUserRole,
+  deleteCourseByCourseId,
 } from 'controllers/v1/admin.controller.ts';
 import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 
@@ -38,6 +39,12 @@ router.patch(
   '/update-user-role/:userId',
   accessByLevelMiddleware([3], 'Only admins is allowed to promote a user'),
   updateUserRole
+);
+
+router.delete(
+  '/delete-course/:courseId',
+  accessByLevelMiddleware([3], 'Only admins is allowed to delete a course'),
+  deleteCourseByCourseId
 );
 
 export default router;
