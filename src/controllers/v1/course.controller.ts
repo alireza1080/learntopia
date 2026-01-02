@@ -510,9 +510,9 @@ const getRelatedCourses = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Course not found' });
     }
 
-    //! get related courses except the current course
+    //! get related courses with the same category except the current course
     const relatedCourses = await prisma.course.findMany({
-      where: { id: { not: courseId } },
+      where: { categoryId: existingCourse.categoryId, id: { not: courseId } },
       take: count,
     });
 
