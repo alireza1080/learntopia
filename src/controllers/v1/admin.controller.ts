@@ -412,9 +412,56 @@ const approveComment = async (req: Request, res: Response) => {
       data: { isApproved: true },
     });
 
+    if (!approvedComment) {
+      return res
+        .status(400)
+        .json({ message: 'Failed to approve comment, try again later' });
+    }
+
     return res.status(200).json({ message: 'Comment approved successfully' });
   } catch (error) {
     console.error('Error approving comment', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const deleteComment = async (req: Request, res: Response) => {
+  try {
+    const { commentId } = req.params;
+
+    //! validate comment id
+    const { success: commentIdSuccess, error: commentIdError } =
+      mongodbIdValidator('Comment ID').safeParse(commentId);
+
+    if (!commentIdSuccess) {
+      return res
+        .status(400)
+        .json({ message: commentIdError?.issues[0]?.message });
+    }
+
+    //! check if comment exists
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      return res.status(400).json({ message: 'Comment not found' });
+    }
+
+    //! delete comment
+    const deletedComment = await prisma.comment.delete({
+      where: { id: commentId },
+    });
+
+    if (!deletedComment) {
+      return res
+        .status(400)
+        .json({ message: 'Failed to delete comment, try again later' });
+    }
+
+    return res.status(200).json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting comment', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -428,4 +475,5 @@ export {
   deleteCourseByCourseId,
   getAllNotApprovedComments,
   approveComment,
+  deleteComment,
 };

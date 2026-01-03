@@ -8,6 +8,7 @@ import {
   deleteCourseByCourseId,
   getAllNotApprovedComments,
   approveComment,
+  deleteComment,
 } from 'controllers/v1/admin.controller.ts';
 import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 
@@ -62,6 +63,12 @@ router.patch(
   '/approve-comment/:commentId',
   accessByLevelMiddleware([3], 'Only admins is allowed to approve a comment'),
   approveComment
+);
+
+router.delete(
+  '/delete-comment/:commentId',
+  accessByLevelMiddleware([3], 'Only admins is allowed to delete a comment'),
+  deleteComment
 );
 
 export default router;
