@@ -5,6 +5,8 @@ import {
   getAllCoursesByCategoryId,
   getCourseById,
   getRelatedCourses,
+  getPopularCoursesByRating,
+  getPopularCoursesByStudentsCount,
 } from '../../../controllers/v1/course.controller.ts';
 import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 
@@ -34,5 +36,9 @@ router.get('/category/:categoryId', getAllCoursesByCategoryId);
 router.get('/:courseId', getCourseById);
 
 router.get('/related-courses/:courseId/:count', getRelatedCourses);
+
+router.get('/popular-courses-by-rating/:count', getPopularCoursesByRating);
+
+router.get('/popular-courses-by-students-count/:count', getPopularCoursesByStudentsCount);
 
 export default router;

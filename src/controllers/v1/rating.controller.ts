@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from 'services/db.service.ts';
 import mongodbIdValidator from 'validators/mongodbId.validator.ts';
-import rateValidator from 'validators/rate.validator.ts';
+import rateValidator from 'validators/integer.validator.ts';
 
 const createRating = async (req: Request, res: Response) => {
   try {

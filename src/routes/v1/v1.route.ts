@@ -3,7 +3,6 @@ import authRoutes from './routes/auth.route.ts';
 import adminRoutes from './routes/admin.route.ts';
 import authMiddleware from 'middlewares/auth.middleware.ts';
 import roleLevelMiddleware from 'middlewares/roleLevel.middleware.ts';
-import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 import userRoutes from './routes/user.route.ts';
 import courseCategoryRoutes from './routes/courseCategory.route.ts';
 import courseRoutes from './routes/course.route.ts';

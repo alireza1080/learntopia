@@ -10,6 +10,7 @@ import mongodbIdValidator from 'validators/mongodbId.validator.ts';
 import positiveNumberValidator from 'validators/positiveNumber.validator.ts';
 import priceValidator from 'validators/price.validator.ts';
 import slugValidator from 'validators/slug.validator.ts';
+import countValidator from 'validators/integer.validator.ts';
 
 const createCourse = async (req: Request, res: Response) => {
   try {
@@ -527,10 +528,131 @@ const getRelatedCourses = async (req: Request, res: Response) => {
   }
 };
 
+const getPopularCoursesByRating = async (req: Request, res: Response) => {
+  try {
+    //! get count from request params
+    const { count: rawCount } = req.params;
+
+    //! validate count
+    const {
+      success: countSuccess,
+      error: countError,
+      data: count,
+    } = countValidator('Count', 1, 20).safeParse(+rawCount);
+
+    if (!countSuccess) {
+      return res.status(400).json({ message: countError?.issues[0]?.message });
+    }
+
+    //! get all courses
+    const allCourses = await prisma.course.findMany();
+
+    //! get ratings for each course and calculate the average rating for each course
+    const ratings = await Promise.all(
+      allCourses.map(async (course) => {
+        const ratings = await prisma.courseRating.findMany({
+          where: { courseId: course.id },
+        });
+        const totalRating = ratings.reduce(
+          (acc, rating) => acc + rating.rating,
+          0
+        );
+        const averageRating = totalRating / ratings.length || 0;
+
+        return { id: course.id, averageRating };
+      })
+    );
+
+    //! sort the courses by the average rating
+    const sortedCourses = ratings.sort(
+      (a, b) => b.averageRating - a.averageRating
+    );
+
+    //! get the top courses
+    const topCourses = sortedCourses.slice(0, count);
+
+    //! get add the course details to the top courses
+    const topCoursesWithDetails = await Promise.all(
+      topCourses.map(async (course) => {
+        const courseDetails = await prisma.course.findUnique({
+          where: { id: course.id },
+        });
+        return { ...course, ...courseDetails };
+      })
+    );
+    return res
+      .status(200)
+      .json({
+        message: 'Popular courses fetched successfully',
+        data: { topCoursesWithDetails },
+      });
+  } catch (error) {
+    console.error('Error getting popular courses by rating', error);
+    return res.status(500).json({
+      message:
+        'Error getting popular courses by rating, please try again later',
+    });
+  }
+};
+
+const getPopularCoursesByStudentsCount = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    //! get count from request params
+    const { count: rawCount } = req.params;
+
+    //! validate count
+    const { success: countSuccess, error: countError, data: count } = countValidator('Count', 1, 20).safeParse(+rawCount);
+
+    if (!countSuccess) {
+      return res.status(400).json({ message: countError?.issues[0]?.message });
+    }
+
+    //! get all courses
+    const allCourses = await prisma.course.findMany();
+
+    //! get the number of students who have purchased each course
+    const studentsCount = await Promise.all(allCourses.map(async (course) => {
+      const studentsCount = await prisma.userCourse.count({
+        where: { courseId: course.id },
+      });
+      return { id: course.id, studentsCount };
+    }));
+
+    //! sort the courses by the number of students
+    const sortedCourses = studentsCount.sort((a, b) => b.studentsCount - a.studentsCount);
+
+    //! get the top courses
+    const topCourses = sortedCourses.slice(0, count);
+
+    //! add the course details to the top courses
+    const topCoursesWithDetails = await Promise.all(topCourses.map(async (course) => {
+      const courseDetails = await prisma.course.findUnique({
+        where: { id: course.id },
+      });
+      return { ...course, ...courseDetails };
+    }));
+
+    return res.status(200).json({
+      message: 'Popular courses fetched successfully',
+      data: { topCoursesWithDetails },
+    });
+  } catch (error) {
+    console.error('Error getting popular courses by students count', error);
+    return res.status(500).json({
+      message: 'Error getting popular courses by students count, please try again later',
+    });
+  }
+};
+
 export {
   createCourse,
   purchaseCourse,
   getAllCoursesByCategoryId,
   getCourseById,
   getRelatedCourses,
+  getPopularCoursesByRating,
+  getPopularCoursesByStudentsCount,
 };
