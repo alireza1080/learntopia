@@ -9,6 +9,7 @@ import {
   getAllNotApprovedComments,
   approveComment,
   deleteComment,
+  replyToComment,
 } from 'controllers/v1/admin.controller.ts';
 import accessByLevelMiddleware from 'middlewares/accessByLevel.middleware.ts';
 
@@ -69,6 +70,12 @@ router.delete(
   '/delete-comment/:commentId',
   accessByLevelMiddleware([3], 'Only admins is allowed to delete a comment'),
   deleteComment
+);
+
+router.post(
+  '/reply-to-comment/:commentId',
+  accessByLevelMiddleware([3], 'Only admins is allowed to reply to a comment'),
+  replyToComment
 );
 
 export default router;

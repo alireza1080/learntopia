@@ -4,6 +4,7 @@ import mongodbIdValidator from 'validators/mongodbId.validator.ts';
 import roleValidator from 'validators/role.validator.ts';
 import { Role } from 'generated/prisma/client.ts';
 import positiveNumberValidator from 'validators/positiveNumber.validator.ts';
+import commentValidator from 'validators/description.validator.ts';
 
 const banUser = async (req: Request, res: Response) => {
   try {
@@ -466,6 +467,84 @@ const deleteComment = async (req: Request, res: Response) => {
   }
 };
 
+const replyToComment = async (req: Request, res: Response) => {
+  try {
+    const { commentId } = req.params;
+
+    //! validate comment id
+    const { success: commentIdSuccess, error: commentIdError } =
+      mongodbIdValidator('Comment ID').safeParse(commentId);
+
+    if (!commentIdSuccess) {
+      return res
+        .status(400)
+        .json({ message: commentIdError?.issues[0]?.message });
+    }
+
+    //! check if comment exists
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      return res.status(400).json({ message: 'Comment not found' });
+    }
+
+    //! check if comment is a reply
+    if (comment.isItReply) {
+      return res.status(400).json({ message: 'You cannot reply to a reply' });
+    }
+
+    //! check if request body is provided
+    if (!req.body) {
+      return res.status(400).json({ message: 'Request body is required' });
+    }
+
+    //! get reply from request body
+    const { reply } = req.body;
+
+    //! validate reply
+    const { success: replySuccess, error: replyError } = commentValidator(
+      'Reply',
+      2000,
+      10
+    ).safeParse(reply);
+
+    if (!replySuccess) {
+      return res.status(400).json({ message: replyError?.issues[0]?.message });
+    }
+
+    const [approveMainComment, createReply] = await Promise.all([
+      prisma.comment.update({
+        where: { id: commentId },
+        data: { isApproved: true },
+      }),
+      prisma.comment.create({
+        data: {
+          userId: req.user?.id as string,
+          courseId: comment.courseId,
+          sessionId: comment.sessionId,
+          comment: reply,
+          isItReply: true,
+          isApproved: true,
+          replyTo: commentId,
+        },
+      }),
+    ]);
+
+    if (!approveMainComment || !createReply) {
+      return res
+        .status(400)
+        .json({ message: 'Failed to reply to comment, try again later' });
+    }
+
+    return res.status(200).json({ message: 'Comment replied successfully' });
+  } catch (error) {
+    console.error('Error replying to comment', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export {
   banUser,
   unBanUser,
@@ -476,4 +555,5 @@ export {
   getAllNotApprovedComments,
   approveComment,
   deleteComment,
+  replyToComment,
 };

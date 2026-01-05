@@ -359,7 +359,7 @@ const getCourseById = async (req: Request, res: Response) => {
       omit: { password: true, phone: true, email: true },
     });
 
-    //! get replies for each comment
+    //! get replies for each comment separately
     const replies = await prisma.comment.findMany({
       where: { courseId, isApproved: true, isItReply: true },
     });
@@ -368,6 +368,14 @@ const getCourseById = async (req: Request, res: Response) => {
     const replyAuthors = await prisma.user.findMany({
       where: { id: { in: replies.map((reply) => reply.userId) } },
       omit: { password: true, phone: true, email: true },
+    });
+
+    //! Add the replies to the comments
+    const commentsWithReplies = comments.map((comment) => {
+      return {
+        ...comment,
+        replies: replies.filter((reply) => reply.replyTo === comment.id),
+      };
     });
 
     //! get ratings for the course
@@ -449,16 +457,7 @@ const getCourseById = async (req: Request, res: Response) => {
         totalDuration,
         comments: {
           total: comments.length,
-          data: comments.map((comment) => ({
-            ...comment,
-            author: commentAuthors.find(
-              (author) => author.id === comment.userId
-            ),
-            replies: replies.map((reply) => ({
-              ...reply,
-              author: replyAuthors.find((author) => author.id === reply.userId),
-            })),
-          })),
+          data: commentsWithReplies,
         },
         ratings: {
           average: roundedAverageRating,
