@@ -9,6 +9,7 @@ import courseCategoryRoutes from './routes/courseCategory.route.ts';
 import courseRoutes from './routes/course.route.ts';
 import sessionRoutes from './routes/session.route.ts';
 import commentRoutes from './routes/comment.route.ts';
+import ratingRoutes from './routes/rating.route.ts';
 
 const router = Router();
 
@@ -30,5 +31,7 @@ router.use('/course', authMiddleware, roleLevelMiddleware, courseRoutes);
 router.use('/session', authMiddleware, roleLevelMiddleware, sessionRoutes);
 
 router.use('/comment', authMiddleware, roleLevelMiddleware, commentRoutes);
+
+router.use('/rating', authMiddleware, roleLevelMiddleware, ratingRoutes);
 
 export default router;
